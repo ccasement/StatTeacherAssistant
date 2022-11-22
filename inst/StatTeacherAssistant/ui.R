@@ -46,6 +46,13 @@ navbarPage("StatTeacherAssistant",
     #tags$head(tags$style(HTML(".modal-footer {display: none}"))),
 
 
+    # suppress all warnings in console
+    # tags$style(type = "text/css",
+    #   ".shiny-output-error {visibility: hidden;}",
+    #   ".shiny-output-error:before {visibility: hidden;}"
+    # ),
+
+
     # remove arrows from all numeric inputs
     tags$style(HTML("
       input[type=number]::-webkit-inner-spin-button,
@@ -108,8 +115,8 @@ navbarPage("StatTeacherAssistant",
       column(3,
         div(style = "margin-top: -2em;"),
         h3(style = "color: red; font-weight: bold;", "Step 1"),
-        p(style = "color: red; font-weight: bold;", "Click the 'Browse...' 
-          button below to upload a data set. Then click the 'Store Data Set' 
+        p(style = "color: red; font-weight: bold;", "Click the 'Browse...'
+          button below to upload a data set. Then click the 'Store Data Set'
           button."
         ),
 
@@ -2968,22 +2975,22 @@ navbarPage("StatTeacherAssistant",
           selected = "csv"
         ),
 
-  		  
-  		  # downloadButtonCustom <- function(outputId, label = "Download", 
+
+  		  # downloadButtonCustom <- function(outputId, label = "Download",
   		  #   class = NULL, ...
   		  # ) {
-  		  #   
-  		  #   aTag <- 
+  		  #
+  		  #   aTag <-
   		  #     tags$a(
   		  #       id = outputId,
   		  #       class = paste("btn btn-default shiny-download-link")
   		  #     )
   		  # }
-  		  
-  		  
+
+
   		  # actionButton("save_final", "Save"),
-  		  
-  		  
+
+
   			downloadButton("download_dataset", "Download",
   			  class = "btn btn-primary"
   		  )
@@ -3007,7 +3014,7 @@ navbarPage("StatTeacherAssistant",
       strong("Uploading a data set"),
 
       p("The app accepts files with the following (common) extensions when
-        uploading data: .csv, .xlsx, .xls, .rda, .RData, .rds, .mtp, .mat, .txt, 
+        uploading data: .csv, .xlsx, .xls, .rda, .RData, .rds, .mtp, .mat, .txt,
         .sas7bdat, .sav, and .dta."
       ),
 
@@ -3125,12 +3132,12 @@ navbarPage("StatTeacherAssistant",
       h3(style = "color: blue;", "Download Data"),
 
       p("When downloading the data set, you must type a name for the file. Then
-        select from the following list of file extensions: .csv, .xlsx, .mat, 
-        .txt, .rda, .RData, .rds, and .sav. Three additional functionalities are 
-        available as well: for specifying missing values, selecting specific 
-        variables to download, and reordering variables. Note that if you 
-        download a file with extension .mat, and there are periods in any of the 
-        variable names, those periods will be converted automatically to 
+        select from the following list of file extensions: .csv, .xlsx, .mat,
+        .txt, .rda, .RData, .rds, and .sav. Three additional functionalities are
+        available as well: for specifying missing values, selecting specific
+        variables to download, and reordering variables. Note that if you
+        download a file with extension .mat, and there are periods in any of the
+        variable names, those periods will be converted automatically to
         underscores."
       )
     )

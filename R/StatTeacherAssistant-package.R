@@ -1,15 +1,15 @@
-#' StatTeacherAssistant: An Application for Creating, Adjusting, and Checking
-#'   the Suitability of Data Sets for Courses that Incorporate Introductory
-#'   Statistical Methods
+#' StatTeacherAssistant: An App that Assists Intro Statistics Instructors with
+#'   Data Sets
 #'
-#' @description The StatTeacherAssistant package enables users to randomly
-#'   generate data, make new versions of existing data through common
-#'   adjustments -- e.g., adding random normal noise and performing
-#'   transformations -- and check the suitability of the resulting data for
-#'   statistical analyses. The app was designed to support educators in
-#'   wide-ranging disciplines, with a particular focus on those teaching
-#'   introductory statistical methods -- descriptive and/or inferential -- for
-#'   data analysis.
+#' @description The StatTeacherAssistant package includes an interactive
+#'   application for instructors who use data sets when teaching introductory
+#'   statistical methods. The app enables users to randomly generate data, make
+#'   new versions of existing data through common adjustments (e.g., adding
+#'   random normal noise and performing transformations), and check the
+#'   suitability of the resulting data for statistical analyses. The app was
+#'   designed to support educators in wide-ranging disciplines, with a
+#'   particular focus on those teaching introductory statistical methods
+#'   (descriptive and/or inferential) for data analysis.
 #'
 #' @aliases StatTeacherAssistant-package StatTeacherAssistant
 #'
@@ -45,7 +45,7 @@
 #' @details Package: StatTeacherAssistant \cr
 #' Type: Package \cr
 #' Version: 0.0.1 \cr
-#' Date: 2022-11-15 \cr
+#' Date: 2022-11-22 \cr
 #' Depends: R (>= 3.5.0) \cr
 #' Imports: DescTools, dplyr, DT, ggplot2, plotly, rhandsontable, rio, rmatio,
 #' shiny, shinyalert, shinyBS, shinyjs, sortable, stringi, stringr,

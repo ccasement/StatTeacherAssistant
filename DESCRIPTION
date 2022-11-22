@@ -1,16 +1,21 @@
 Type: Package
 Package: StatTeacherAssistant
-Title: An Application for Creating, Adjusting, and Checking the
-    Suitability of Data Sets for Courses that Incorporate Introductory
-    Statistical Methods
+Title: An App that Assists Intro Statistics Instructors with Data Sets
 Version: 0.0.1
 Authors@R: c(
     person("Christopher", "Casement", , "casementc@gmail.com", role = c("cre", "aut")),
     person("Laura", "McSweeney", role = "aut")
   )
 Maintainer: Christopher Casement <casementc@gmail.com>
-Description: Package including an interactive Shiny application for
-    instructors who teach introductory statistical methods.
+Description: Package including an interactive application for instructors
+    who use data sets when teaching introductory statistical methods. The
+    app enables users to randomly generate data, make new versions of
+    existing data through common adjustments (e.g., adding random normal
+    noise and performing transformations), and check the suitability of
+    the resulting data for statistical analyses. The app was designed to
+    support educators in wide-ranging disciplines, with a particular focus
+    on those teaching introductory statistical methods (descriptive and/or
+    inferential) for data analysis.
 License: MIT + file LICENSE
 URL: https://github.com/ccasement/StatTeacherAssistant,
     https://CRAN.R-project.org/package=StatTeacherAssistant
