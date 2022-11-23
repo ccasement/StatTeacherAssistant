@@ -7,15 +7,13 @@ Authors@R: c(
     person("Laura", "McSweeney", role = "aut")
   )
 Maintainer: Christopher Casement <casementc@gmail.com>
-Description: Package including an interactive application for instructors
-    who use data sets when teaching introductory statistical methods. The
-    app enables users to randomly generate data, make new versions of
-    existing data through common adjustments (e.g., adding random normal
-    noise and performing transformations), and check the suitability of
-    the resulting data for statistical analyses. The app was designed to
-    support educators in wide-ranging disciplines, with a particular focus
-    on those teaching introductory statistical methods (descriptive and/or
-    inferential) for data analysis.
+Description: Includes an interactive application designed to support
+    educators in wide-ranging disciplines, with a particular focus on
+    those teaching introductory statistical methods (descriptive and/or
+    inferential) for data analysis. Users are able to randomly generate
+    data, make new versions of existing data through common adjustments
+    (e.g., add random normal noise and perform transformations), and check
+    the suitability of the resulting data for statistical analyses.
 License: MIT + file LICENSE
 URL: https://github.com/ccasement/StatTeacherAssistant,
     https://CRAN.R-project.org/package=StatTeacherAssistant
