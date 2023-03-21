@@ -3152,17 +3152,14 @@ navbarPage("StatTeacherAssistant",
 
   tabPanel("About", icon = icon("info-circle"),
 
-    column(4,
-      h4("The information below will be updated after the completion of the
-        blind review process for the associated article."
-      ),
-
-      linebreaks(1),
+    column(5,
 
       # information about the developers
       h4("Developers"),
 
-      p("This tool was developed by Anonymous."),
+      p("This tool was developed by Chris Casement and Laura McSweeney, faculty
+        in the Department of Mathematics at Fairfield University."
+      ),
 
       linebreaks(1),
 
@@ -3183,19 +3180,35 @@ navbarPage("StatTeacherAssistant",
       # contact info
       h4("Contact"),
 
-      p("Email: Anonymous"),
+      p("Email: casementc@gmail.com"),
 
       linebreaks(1),
 
 
       # copyright statement
-      p("Copyright \uA9 2020-2022 by Anonymous."),
+      p("Copyright \uA9 2020-2023 by Christopher J. Casement and Laura A.
+        McSweeney."
+      ),
 
       p("The license statement can be found",
         a("here.", href = "https://choosealicense.com/licenses/mit/",
           target = "_blank"
         )
       )
+    ),
+
+
+    column(1, ""),
+
+
+    column(4,
+
+      br(),
+      br(),
+      br(),
+      br(),
+
+      img(src = "StatTeacherAssistant_Sticker_Image.png", height = "300px")
     )
   )
 )

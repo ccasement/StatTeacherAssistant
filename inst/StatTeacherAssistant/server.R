@@ -18,6 +18,10 @@ library(dplyr)
 
 shinyServer(function(session, input, output) {
 
+  # stop server when pop-up window closed
+  session$onSessionEnded(function(x) stopApp())
+
+
   ##############################################################################
   ################################ Initial Stuff ###############################
   ##############################################################################
