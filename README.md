@@ -4,7 +4,7 @@ data sets for courses that incorporate introductory statistical methods
 
 <!-- start badges -->
 
-![](https://img.shields.io/badge/release-v0.0.2-blue?style=flat) [![CRAN
+![](https://img.shields.io/badge/release-v0.0.3-blue?style=flat) [![CRAN
 status](https://www.r-pkg.org/badges/version/StatTeacherAssistant)](https://CRAN.R-project.org/package=StatTeacherAssistant)
 <!-- end badges -->
 
