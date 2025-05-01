@@ -16,6 +16,7 @@
 #' @importFrom dplyr arrange bind_cols filter group_by na_if relocate rename
 #'   select summarize tally
 #' @importFrom DT datatable DTOutput renderDT
+#' @importFrom extraDistr rnsbeta
 #' @importFrom ggplot2 aes aes_string element_blank geom_abline geom_bar
 #'   geom_boxplot geom_histogram geom_point ggplot labs stat_qq stat_qq_line
 #'   theme theme_grey theme_set ylab
@@ -32,7 +33,6 @@
 #'   quantile rbinom rmultinom rnorm runif sd t.test
 #' @importFrom stringi stri_dup
 #' @importFrom stringr str_count str_detect str_trim
-#' @importFrom teachingApps rbeta4
 #' @importFrom tidyr drop_na all_of
 #' @importFrom utils capture.output head read.csv
 #'
@@ -42,12 +42,12 @@
 #'
 #' @details Package: StatTeacherAssistant \cr
 #' Type: Package \cr
-#' Version: 0.0.1 \cr
-#' Date: 2022-11-23 \cr
+#' Version: 0.0.3 \cr
+#' Date: 2025-05-01 \cr
 #' Depends: R (>= 3.5.0) \cr
-#' Imports: DescTools, dplyr, DT, ggplot2, plotly, rhandsontable, rio, rmatio,
-#' shiny, shinyalert, shinyBS, shinyjs, sortable, stringi, stringr,
-#' teachingApps, tidyr
+#' Imports: DescTools, dplyr, DT, extraDistr, ggplot2, plotly, rhandsontable,
+#' rio, rmatio, shiny, shinyalert, shinyBS, shinyjs, sortable, stringi, stringr,
+#' tidyr
 #' License: MIT \cr
 #' BugReports: https://github.com/ccasement/StatTeacherAssistant/issues \cr
 #' Encoding: UTF-8 \cr

@@ -7,7 +7,7 @@ library(tidyr)
 library(stringr)
 library(DT)
 library(DescTools)
-library(teachingApps)  # for the rbeta4 fxn when randomly generating data
+library(extraDistr)  # for the generalized beta dist
 library(plotly)
 library(rhandsontable)
 library(rio)     # make sure rio loaded after plotly due to masking
@@ -54,6 +54,16 @@ shinyServer(function(session, input, output) {
 
   ### make fxns
   ##################################################
+
+  # set output type -- table vs. spreadsheet
+  render_select <- function(view_type, dataset) {
+    if (view_type == "table") {
+      output$df_new_dt <<- renderDT(dataset, options = list(scrollX = TRUE))
+    } else if (view_type == "spreadsheet") {
+      output$df_new_rhot <<- renderRHandsontable(rhandsontable(dataset))
+    }
+  }
+
 
   # print warning popup alert and keep app from crashing if no var selected
   no_var_warning <- function(x) {
@@ -207,11 +217,15 @@ shinyServer(function(session, input, output) {
   showModal(
     modalDialog(
       h3(style = "color: red; font-weight: bold; text-align: center;",
-        "Important message:"
+        "Important messages:"
       ),
 
-      h3(style = "text-align: center;", "Any uploaded file must be smaller than
-        5 MB in size."
+      h3(style = "text-align: center;", "(1) The app will automatically
+        disconnect after 15 minutes of inactivity."
+      ),
+
+      h3(style = "text-align: center;", "(2) Any uploaded file must be smaller
+        than 5 MB in size."
       ),
 
       easyClose = TRUE
@@ -290,7 +304,7 @@ shinyServer(function(session, input, output) {
         nas <- c("", " ")
       }
 
-      bag$data_original_df <- rio::import(input$data_file$datapath, na = nas)
+      bag$data_original_df <- import(input$data_file$datapath, na = nas)
 
     } else if (bag$file_extension == "txt") {
 
@@ -305,7 +319,7 @@ shinyServer(function(session, input, output) {
         nas <- c("", " ")
       }
 
-      bag$data_original_df <- rio::import(input$data_file$datapath, na.strings = nas)
+      bag$data_original_df <- import(input$data_file$datapath, na.strings = nas)
 
     } else if (bag$file_extension == "mat") {
 
@@ -313,7 +327,7 @@ shinyServer(function(session, input, output) {
 
     } else {
 
-      bag$data_original_df <- rio::import(input$data_file$datapath)
+      bag$data_original_df <- import(input$data_file$datapath)
     }
 
 
@@ -333,15 +347,7 @@ shinyServer(function(session, input, output) {
 
 
     # print original data set in Adjust Data tab
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_original_df,
-        options = list(scrollX = TRUE)
-      )
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(
-        rhandsontable(bag$data_original_df)
-      )
-    }
+    render_select(input$data_view, bag$data_original_df)
 
 
     # update variable name select inputs in Check Data tab
@@ -681,11 +687,13 @@ shinyServer(function(session, input, output) {
         validate(need(input$beta4_min < input$beta4_max, ""))
 
 
-        # randomly sample data; rbeta4 = 4-parameter beta
+        # randomly sample data; rnsbeta = non-standard (generalized) beta
         current_vars <- replicate(input$n_vars_quant,
-          rbeta4(input$samp_size_quant, min = input$beta4_min,
-            max = input$beta4_max, shape1 = params[1], shape2 = params[2],
-            seed = sample(1:1e5, 1)
+          rnsbeta(input$samp_size_quant,
+            min = input$beta4_min,
+            max = input$beta4_max,
+            shape1 = params[1],
+            shape2 = params[2]
           )
         )
       }
@@ -1236,17 +1244,17 @@ shinyServer(function(session, input, output) {
       if (input$sim_vs_existing == "beginning") {
         # store combined data sets as original in case user resets data set in
         #  Adjust Data tab
-        bag$data_original_df <- dplyr::bind_cols(bag$current_vars, bag$data_new_df)
+        bag$data_original_df <- bind_cols(bag$current_vars, bag$data_new_df)
 
         # add current variable to existing df
-        bag$data_new_df <- dplyr::bind_cols(bag$current_vars, bag$data_new_df)
+        bag$data_new_df <- bind_cols(bag$current_vars, bag$data_new_df)
       } else {
         # store combined data sets as original in case user resets data set in
         #  Adjust Data tab
-        bag$data_original_df <- dplyr::bind_cols(bag$data_new_df, bag$current_vars)
+        bag$data_original_df <- bind_cols(bag$data_new_df, bag$current_vars)
 
         # add current variable to existing df
-        bag$data_new_df <- dplyr::bind_cols(bag$data_new_df, bag$current_vars)
+        bag$data_new_df <- bind_cols(bag$data_new_df, bag$current_vars)
       }
     } else {
 
@@ -1271,11 +1279,7 @@ shinyServer(function(session, input, output) {
 
 
     # print data set in Adjust Data tab
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
+    render_select(input$data_view, bag$data_new_df)
 
 
     # print message indicating successful storage
@@ -1287,11 +1291,7 @@ shinyServer(function(session, input, output) {
 
 
     # print data set in Adjust Data tab
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
+    render_select(input$data_view, bag$data_new_df)
 
 
     # update variable name select inputs in Check Data tab
@@ -1412,12 +1412,7 @@ shinyServer(function(session, input, output) {
 
 
     # print new data set
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
-
+    render_select(input$data_view, bag$data_new_df)
   })
 
 
@@ -1430,7 +1425,7 @@ shinyServer(function(session, input, output) {
     no_var_warning(input$select_var)
 
 
-    selected_data <- dplyr::select(bag$data_new_df, input$select_var)
+    selected_data <- select(bag$data_new_df, input$select_var)
 
 
     # determine which variables are numeric; tf = true/false
@@ -1512,12 +1507,7 @@ shinyServer(function(session, input, output) {
 
 
     # print new data set
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
-
+    render_select(input$data_view, bag$data_new_df)
   })
 
 
@@ -1691,7 +1681,7 @@ shinyServer(function(session, input, output) {
     selected_vars <- data.frame(var1 = bag$data_new_df[, input$combine_var_1])
 
     for (i in 2:bag$combine_num_vars) {
-      selected_vars <- dplyr::bind_cols(
+      selected_vars <- bind_cols(
         selected_vars,
         data.frame(
           bag$data_new_df[, input[[paste0("combine_var_", i)]]]
@@ -1784,15 +1774,11 @@ shinyServer(function(session, input, output) {
     names(combo_var_df)[1] <- input$combined_var_name
 
 
-    bag$data_new_df <- dplyr::bind_cols(combo_var_df, bag$data_new_df)
+    bag$data_new_df <- bind_cols(combo_var_df, bag$data_new_df)
 
 
     # print new data set
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
+    render_select(input$data_view, bag$data_new_df)
 
 
     # update variable names list for drop-down menu in Adjust Data tab
@@ -1874,12 +1860,7 @@ shinyServer(function(session, input, output) {
 
 
     # print new data set
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
-
+    render_select(input$data_view, bag$data_new_df)
   })
 
 
@@ -1980,12 +1961,7 @@ shinyServer(function(session, input, output) {
 
 
     # print new data set
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
-
+    render_select(input$data_view, bag$data_new_df)
   })
 
 
@@ -2072,11 +2048,7 @@ shinyServer(function(session, input, output) {
 
 
     # print new data set
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
+    render_select(input$data_view, bag$data_new_df)
   })
 
 
@@ -2160,7 +2132,7 @@ shinyServer(function(session, input, output) {
 
     # arrange values in increasing order
     df <- data.frame(obs = 1:length(x), x = x)
-    df_inc_x <- dplyr::arrange(df, x)
+    df_inc_x <- arrange(df, x)
 
 
     # update so stay w/in bounds w/ noise
@@ -2862,7 +2834,7 @@ shinyServer(function(session, input, output) {
 
     # make df with x and y data
     new_xy <- cbind(df_inc_x, y)
-    new_xy <- dplyr::arrange(new_xy, obs)
+    new_xy <- arrange(new_xy, obs)
 
 
     # add new variable as last column in bag$data_new_df
@@ -2871,7 +2843,7 @@ shinyServer(function(session, input, output) {
 
     # move new variable to beginning of df
     new_col_index <- ncol(bag$data_new_df)
-    bag$data_new_df <- dplyr::relocate(bag$data_new_df, all_of(new_col_index),
+    bag$data_new_df <- relocate(bag$data_new_df, all_of(new_col_index),
       .before = names(bag$data_new_df)[1]
     )
 
@@ -2892,11 +2864,7 @@ shinyServer(function(session, input, output) {
 
 
     # print new data set
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
+    render_select(input$data_view, bag$data_new_df)
 
 
     # update variable name select inputs in Check Data tab
@@ -2947,12 +2915,7 @@ shinyServer(function(session, input, output) {
 
 
     # print new data set
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
-
+    render_select(input$data_view, bag$data_new_df)
   })
 
 
@@ -3002,12 +2965,7 @@ shinyServer(function(session, input, output) {
 
 
     # print new data set
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
-
+    render_select(input$data_view, bag$data_new_df)
   })
 
 
@@ -3051,12 +3009,7 @@ shinyServer(function(session, input, output) {
 
 
     # print new data set
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
-
+    render_select(input$data_view, bag$data_new_df)
   })
 
 
@@ -3217,11 +3170,7 @@ shinyServer(function(session, input, output) {
 
 
     # print new data set
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
+    render_select(input$data_view, bag$data_new_df)
 
 
     ### update proportion inputs
@@ -3266,7 +3215,7 @@ shinyServer(function(session, input, output) {
     no_var_warning(input$select_var)
 
 
-    bag$data_new_df[, input$select_var] <- dplyr::na_if(
+    bag$data_new_df[, input$select_var] <- na_if(
       bag$data_new_df[, input$select_var], input$denote_missing
     )
 
@@ -3280,12 +3229,7 @@ shinyServer(function(session, input, output) {
 
 
     # print new data set
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
-
+    render_select(input$data_view, bag$data_new_df)
   })
 
 
@@ -3300,7 +3244,7 @@ shinyServer(function(session, input, output) {
 
     # select data; reverse order of columns so maintain order in which user
     #  selects variables when making copies
-    selected_data <- dplyr::select(bag$data_new_df, rev(input$select_var))
+    selected_data <- select(bag$data_new_df, rev(input$select_var))
 
 
     # warning popup alert if no number of copies input
@@ -3343,13 +3287,13 @@ shinyServer(function(session, input, output) {
       # move copies to beginning of df
       new_col_indices <- (ncol(bag$data_new_df) - input$num_copies + 1) :
         ncol(bag$data_new_df)
-      bag$data_new_df <- dplyr::relocate(bag$data_new_df, all_of(new_col_indices),
+      bag$data_new_df <- relocate(bag$data_new_df, all_of(new_col_indices),
         .before = names(bag$data_new_df)[1]
       )
 
 
       # move original version which made copies of right before copies
-      bag$data_new_df <- dplyr::relocate(bag$data_new_df, names(selected_data)[j],
+      bag$data_new_df <- relocate(bag$data_new_df, names(selected_data)[j],
         .before = names(bag$data_new_df)[1]
       )
     }
@@ -3371,11 +3315,7 @@ shinyServer(function(session, input, output) {
 
 
     # print new data set
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
+    render_select(input$data_view, bag$data_new_df)
 
 
     # update variable name select inputs in Check Data tab
@@ -3393,7 +3333,7 @@ shinyServer(function(session, input, output) {
 
 
     # remove variable(s) from df
-    bag$data_new_df <- dplyr::select(bag$data_new_df, -input$select_var)
+    bag$data_new_df <- select(bag$data_new_df, -input$select_var)
 
 
     # update drop-down menu options for selected variable in Adjust Data tab
@@ -3408,11 +3348,7 @@ shinyServer(function(session, input, output) {
 
 
     # print new data set
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
+    render_select(input$data_view, bag$data_new_df)
 
 
     # update variable name select inputs in Check Data tab
@@ -3481,11 +3417,7 @@ shinyServer(function(session, input, output) {
 
 
     # print new data set
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
+    render_select(input$data_view, bag$data_new_df)
 
 
     # update variable name select inputs in Check Data tab
@@ -3521,12 +3453,7 @@ shinyServer(function(session, input, output) {
 
 
     # print new data set
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
-
+    render_select(input$data_view, bag$data_new_df)
   })
 
 
@@ -3574,12 +3501,7 @@ shinyServer(function(session, input, output) {
 
 
     # print new data set
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
-
+    render_select(input$data_view, bag$data_new_df)
   })
 
 
@@ -3604,11 +3526,7 @@ shinyServer(function(session, input, output) {
 
 
     # print original data set
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
+    render_select(input$data_view, bag$data_new_df)
 
 
     # update variable name select inputs in Check Data tab
@@ -3621,13 +3539,8 @@ shinyServer(function(session, input, output) {
   #################################################
   observeEvent(input$data_view, {
 
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
+    render_select(input$data_view, bag$data_new_df)
   })
-
 
   # update data set if users changes it in spreadsheet view
   observeEvent(input$df_new_rhot, {
@@ -3638,12 +3551,7 @@ shinyServer(function(session, input, output) {
 
 
     # need to render spreadsheet again, otherwise buggy
-    if (input$data_view == "table") {
-      output$df_new_dt <- renderDT(bag$data_new_df, options = list(scrollX = TRUE))
-    } else if (input$data_view == "spreadsheet") {
-      output$df_new_rhot <- renderRHandsontable(rhandsontable(bag$data_new_df))
-    }
-
+    render_select(input$data_view, bag$data_new_df)
   })
 
 
@@ -3747,13 +3655,9 @@ shinyServer(function(session, input, output) {
     #  (until button pressed)
     if (bag$do_descript_1_quant != FALSE) {
 
-      suppressWarnings(print(
-        ggplot(bag$data_new_df,
-          aes_string(x = paste0("`", input$descript_select_1var_var, "`"))
-        ) +
-          geom_histogram(bins = input$descript_1_hist_bins) +
-          ylab("Count")
-      ))
+      ggplot(bag$data_new_df, aes(x = !!sym(input$descript_select_1var_var))) +    # need !! here
+        geom_histogram(bins = input$descript_1_hist_bins) +
+        ylab("Count")
     }
   })
 
@@ -3764,13 +3668,9 @@ shinyServer(function(session, input, output) {
     #  (until button pressed)
     if (bag$do_descript_1_quant != FALSE) {
 
-      suppressWarnings(print(
-        ggplot(bag$data_new_df,
-          aes_string(x = paste0("`", input$descript_select_1var_var, "`"))
-        ) +
-          geom_boxplot() +
-          theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
-      ))
+      ggplot(bag$data_new_df, aes(x = !!sym(input$descript_select_1var_var))) +    # need !! here
+        geom_boxplot() +
+        theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
     }
   })
 
@@ -3856,16 +3756,14 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_descript_1_cat != FALSE) {
-      suppressWarnings(print(
-        ggplot(
-          data = drop_na(
-            bag$data_new_df, .data[[input$descript_select_1var_var]]
-          ),
-          aes_string(x = paste0("`", input$descript_select_1var_var, "`"))
-        ) +
-          geom_bar() +
-          labs(y = "Count")
-      ))
+      ggplot(
+        data = drop_na(
+          bag$data_new_df, .data[[input$descript_select_1var_var]]
+        ),
+        aes(x = !!sym(input$descript_select_1var_var))
+      ) +
+        geom_bar() +
+        labs(y = "Count")
     }
   })
 
@@ -3879,8 +3777,8 @@ shinyServer(function(session, input, output) {
       # make df of counts for each category
       counts_df <- bag$data_new_df %>%
         drop_na(.data[[input$descript_select_1var_var]]) %>%
-        dplyr::group_by(.data[[input$descript_select_1var_var]]) %>%
-        dplyr::tally()
+        group_by(.data[[input$descript_select_1var_var]]) %>%
+        tally()
 
       bag$pie_cat <- plot_ly(counts_df,
         labels = ~.data[[input$descript_select_1var_var]],
@@ -3956,7 +3854,7 @@ shinyServer(function(session, input, output) {
 
 
     # fit regression line and calculate summaries
-    bag$reg_summary <- suppressWarnings(summary(lm(bag$y ~ bag$x)))
+    bag$reg_summary <- summary(lm(bag$y ~ bag$x))
 
 
     # make df w/ bivariate summaries
@@ -4015,22 +3913,20 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_descript_2_quant_quant != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$data_new_df,
-          aes_string(
-            x = paste0("`", input$descript_select_2vars_var_expl, "`"),
-            y = paste0("`", input$descript_select_2vars_var_resp, "`")
-          )
+      ggplot(bag$data_new_df,
+        aes(
+          x = !!sym(input$descript_select_2vars_var_expl),
+          y = !!sym(input$descript_select_2vars_var_resp)
+        )
+      ) +
+        geom_abline(
+          intercept = bag$reg_summary$coefficients[1, 1],
+          slope = bag$reg_summary$coefficients[2, 1],
+          color = "blue",
+          alpha = 0.75,
+          linewidth = 1.5
         ) +
-          geom_abline(
-            intercept = bag$reg_summary$coefficients[1, 1],
-            slope = bag$reg_summary$coefficients[2, 1],
-            color = "blue",
-            alpha = 0.75,
-            size = 1.5
-          ) +
-          geom_point(size = 2)
-      ))
+        geom_point(size = 2)
     }
   })
 
@@ -4071,13 +3967,13 @@ shinyServer(function(session, input, output) {
 
     # remove rows with missing data for grouping (x) variable, otherwise
     # considered separate group
-    bag$selected_vars <- bag$selected_vars %>% dplyr::filter(x != "")
+    bag$selected_vars <- bag$selected_vars %>% filter(x != "")
 
 
     # calculate response var summaries by explanatory var group
     bag$summaries_bygroup <- bag$selected_vars %>%
-      dplyr::group_by(x) %>%
-      dplyr::summarize(
+      group_by(x) %>%
+      summarize(
         Mean = mean(y, na.rm = TRUE),
         Median = median(y, na.rm = TRUE),
         SD = sd(y, na.rm = TRUE),
@@ -4145,11 +4041,9 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_descript_2_quant_cat != FALSE) {
-      suppressWarnings(print(
-        ggplot(data = na.omit(bag$selected_vars), aes(x = x, y = y)) +
-          geom_boxplot() +
-          labs(x = "Explanatory Variable", y = "Response Variable")
-      ))
+      ggplot(data = na.omit(bag$selected_vars), aes(x = x, y = y)) +
+        geom_boxplot() +
+        labs(x = "Explanatory Variable", y = "Response Variable")
     }
   })
 
@@ -4294,16 +4188,14 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_descript_2_cat_cat != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$df_counts,
-          aes_string(
-            x = gsub(" ", ".", input$descript_select_2vars_var_expl),
-            fill = gsub(" ", ".", input$descript_select_2vars_var_resp)
-          )
-        ) +
-          geom_bar(aes(y = Freq), stat = "identity", position = "dodge") +
-          labs(y = "Count")
-      ))
+      ggplot(bag$df_counts,
+        aes(
+          x = gsub(" ", ".", !!sym(input$descript_select_2vars_var_expl)),
+          fill = gsub(" ", ".", !!sym(input$descript_select_2vars_var_resp))
+        )
+      ) +
+        geom_bar(aes(y = Freq), stat = "identity", position = "dodge") +
+        labs(y = "Count")
     }
   })
 
@@ -4439,11 +4331,9 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_t_1 != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$t_1_data, aes(x = data)) +
-          geom_histogram(bins = input$hist_t_1_bins) +
-          labs(y = "Count")
-      ))
+      ggplot(bag$t_1_data, aes(x = data)) +
+        geom_histogram(bins = input$hist_t_1_bins) +
+        labs(y = "Count")
     }
   })
 
@@ -4454,12 +4344,10 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_t_1 != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$t_1_data, aes(sample = data)) +
-          stat_qq() +
-          stat_qq_line() +
-          labs(x = "Theoretical Quantile", y = "Sample Quantile")
-      ))
+      ggplot(bag$t_1_data, aes(sample = data)) +
+        stat_qq() +
+        stat_qq_line() +
+        labs(x = "Theoretical Quantile", y = "Sample Quantile")
     }
   })
 
@@ -4748,11 +4636,9 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_t_paired != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$t_paired_diff, aes(x = diff)) +
-          geom_histogram(bins = input$hist_t_paired_bins) +
-          labs(y = "Count")
-      ))
+      ggplot(bag$t_paired_diff, aes(x = diff)) +
+        geom_histogram(bins = input$hist_t_paired_bins) +
+        labs(y = "Count")
     }
   })
 
@@ -4763,12 +4649,10 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_t_paired != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$t_paired_diff, aes(sample = diff)) +
-          stat_qq() +
-          stat_qq_line() +
-          labs(x = "Theoretical Quantile", y = "Sample Quantile")
-      ))
+      ggplot(bag$t_paired_diff, aes(sample = diff)) +
+        stat_qq() +
+        stat_qq_line() +
+        labs(x = "Theoretical Quantile", y = "Sample Quantile")
     }
   })
 
@@ -4827,14 +4711,14 @@ shinyServer(function(session, input, output) {
 
     # calculate summaries by group
     bag$t_indep_summaries <- t_indep_data %>%
-      dplyr::group_by(group) %>%
-      dplyr::summarize(
+      group_by(group) %>%
+      summarize(
         Mean = mean(response, na.rm = TRUE),
         "Std. Dev." = sd(response, na.rm = TRUE),
         " # Non-missing Obs." = sum(!is.na(response)),
         " # Missing Obs." = sum(is.na(response))
       ) %>%
-      dplyr::rename(Group = group) %>%
+      rename(Group = group) %>%
       as.data.frame()
 
     bag$t_indep_summaries[, 2:ncol(bag$t_indep_summaries)] <- round(
@@ -5041,11 +4925,9 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_t_indep_mm != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$t_indep_wide, aes(x = var1)) +
-          geom_histogram(bins = input$hist_t_indep_mm_1_bins) +
-          labs(y = "Count")
-      ))
+      ggplot(bag$t_indep_wide, aes(x = var1)) +
+        geom_histogram(bins = input$hist_t_indep_mm_1_bins) +
+        labs(y = "Count")
     }
   })
 
@@ -5054,11 +4936,9 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_t_indep_mm != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$t_indep_wide, aes(x = var2)) +
-          geom_histogram(bins = input$hist_t_indep_mm_2_bins) +
-          labs(y = "Count")
-      ))
+      ggplot(bag$t_indep_wide, aes(x = var2)) +
+        geom_histogram(bins = input$hist_t_indep_mm_2_bins) +
+        labs(y = "Count")
     }
   })
 
@@ -5069,12 +4949,10 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_t_indep_mm != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$t_indep_wide, aes(sample = var1)) +
-          stat_qq() +
-          stat_qq_line() +
-          labs(x = "Theoretical Quantile", y = "Sample Quantile")
-      ))
+      ggplot(bag$t_indep_wide, aes(sample = var1)) +
+        stat_qq() +
+        stat_qq_line() +
+        labs(x = "Theoretical Quantile", y = "Sample Quantile")
     }
   })
 
@@ -5083,12 +4961,10 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_t_indep_mm != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$t_indep_wide, aes(sample = var2)) +
-          stat_qq() +
-          stat_qq_line() +
-          labs(x = "Theoretical Quantile", y = "Sample Quantile")
-      ))
+      ggplot(bag$t_indep_wide, aes(sample = var2)) +
+        stat_qq() +
+        stat_qq_line() +
+        labs(x = "Theoretical Quantile", y = "Sample Quantile")
     }
   })
 
@@ -5119,16 +4995,16 @@ shinyServer(function(session, input, output) {
 
     # need df format for var1 and var2 for plots
     bag$var1 <- bag$data_new_df %>%
-      dplyr::filter(.data[[input$t_indep_select_var_2mg]] == input$t_indep_mg_grp_1) %>%
-      dplyr::select(input$t_indep_select_var_1mg)
+      filter(.data[[input$t_indep_select_var_2mg]] == input$t_indep_mg_grp_1) %>%
+      select(input$t_indep_select_var_1mg)
 
     bag$var2 <- bag$data_new_df %>%
-      dplyr::filter(.data[[input$t_indep_select_var_2mg]] == input$t_indep_mg_grp_2) %>%
-      dplyr::select(input$t_indep_select_var_1mg)
+      filter(.data[[input$t_indep_select_var_2mg]] == input$t_indep_mg_grp_2) %>%
+      select(input$t_indep_select_var_1mg)
 
 
     # format data - tidy format
-    t_indep_values <- c(as.vector(bag$var1[, 1]), as.vector(bag$var2)[, 1])
+    t_indep_values <- c(as.vector(bag$var1[, 1]), as.vector(bag$var2[, 1]))
     t_indep_group <- c(rep(1, nrow(bag$var1)), rep(2, nrow(bag$var2)))
 
     t_indep_data <- data.frame(
@@ -5151,14 +5027,14 @@ shinyServer(function(session, input, output) {
 
     # calculate summaries by group
     bag$t_indep_summaries <- t_indep_data %>%
-      dplyr::group_by(group) %>%
-      dplyr::summarize(
+      group_by(group) %>%
+      summarize(
         Mean = mean(response, na.rm = TRUE),
         "Std. Dev." = sd(response, na.rm = TRUE),
         " # Non-missing Obs." = sum(!is.na(response)),
         " # Missing Obs." = sum(is.na(response))
       ) %>%
-      dplyr::rename(Group = group) %>%
+      rename(Group = group) %>%
       as.data.frame()
 
     bag$t_indep_summaries[, 2:ncol(bag$t_indep_summaries)] <- round(
@@ -5365,11 +5241,9 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_t_indep_mg != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$var1, aes_string(x = input$t_indep_select_var_1mg)) +
-          geom_histogram(bins = input$hist_t_indep_mg_1_bins) +
-          labs(y = "Count")
-      ))
+      ggplot(bag$var1, aes(x = !!sym(input$t_indep_select_var_1mg))) +
+        geom_histogram(bins = input$hist_t_indep_mg_1_bins) +
+        labs(y = "Count")
     }
   })
 
@@ -5378,11 +5252,9 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_t_indep_mg != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$var2, aes_string(x = input$t_indep_select_var_1mg)) +
-          geom_histogram(bins = input$hist_t_indep_mg_2_bins) +
-          labs(y = "Count")
-      ))
+      ggplot(bag$var2, aes(x = !!sym(input$t_indep_select_var_1mg))) +
+        geom_histogram(bins = input$hist_t_indep_mg_2_bins) +
+        labs(y = "Count")
     }
   })
 
@@ -5393,12 +5265,10 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_t_indep_mg != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$var1, aes_string(sample = input$t_indep_select_var_1mg)) +
-          stat_qq() +
-          stat_qq_line() +
-          labs(x = "Theoretical Quantile", y = "Sample Quantile")
-      ))
+      ggplot(bag$var1, aes(sample = !!sym(input$t_indep_select_var_1mg))) +
+        stat_qq() +
+        stat_qq_line() +
+        labs(x = "Theoretical Quantile", y = "Sample Quantile")
     }
   })
 
@@ -5407,12 +5277,10 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_t_indep_mg != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$var2, aes_string(sample = input$t_indep_select_var_1mg)) +
-          stat_qq() +
-          stat_qq_line() +
-          labs(x = "Theoretical Quantile", y = "Sample Quantile")
-      ))
+      ggplot(bag$var2, aes(sample = !!sym(input$t_indep_select_var_1mg))) +
+        stat_qq() +
+        stat_qq_line() +
+        labs(x = "Theoretical Quantile", y = "Sample Quantile")
     }
   })
 
@@ -5613,8 +5481,8 @@ shinyServer(function(session, input, output) {
       var2 = bag$data_new_df[, input$z_2_select_var_2mg]
     )
 
-    z_2_grp1 <- z_2_data %>% dplyr::filter(var2 == input$z_2_mg_group_1) %>% dplyr::select(1)
-    z_2_grp2 <- z_2_data %>% dplyr::filter(var2 == input$z_2_mg_group_2) %>% dplyr::select(1)
+    z_2_grp1 <- z_2_data %>% filter(var2 == input$z_2_mg_group_1) %>% select(1)
+    z_2_grp2 <- z_2_data %>% filter(var2 == input$z_2_mg_group_2) %>% select(1)
 
 
     # number of successes and sample size per sample
@@ -5919,14 +5787,14 @@ shinyServer(function(session, input, output) {
 
     # calculate summaries by explanatory var group
     bag$anova_summaries <- bag$anova_data %>%
-      dplyr::group_by(group) %>%
-      dplyr::summarize(
+      group_by(group) %>%
+      summarize(
         Mean = mean(response, na.rm = TRUE),
         "Std. Dev." = sd(response, na.rm = TRUE),
         " # Non-missing Obs." = sum(!is.na(response)),
         " # Missing Obs." = sum(is.na(response))
       ) %>%
-      dplyr::rename(Group = group) %>%
+      rename(Group = group) %>%
       as.data.frame()
 
     bag$anova_summaries[, 2:ncol(bag$anova_summaries)] <- round(
@@ -6128,11 +5996,9 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_anova_mm != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$anova_data, aes(x = group, y = response)) +
-          geom_boxplot() +
-          labs(x = "Group", y = "Response")
-      ))
+      ggplot(bag$anova_data, aes(x = group, y = response)) +
+        geom_boxplot() +
+        labs(x = "Group", y = "Response")
     }
   })
 
@@ -6143,12 +6009,10 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_anova_mm != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$resids_df, aes(x = fitted, y = resid)) +
-          geom_point(size = 2) +
-          geom_abline(slope = 0) +
-          labs(x = "Fitted Value", y = "Residual")
-      ))
+      ggplot(bag$resids_df, aes(x = fitted, y = resid)) +
+        geom_point(size = 2) +
+        geom_abline(slope = 0) +
+        labs(x = "Fitted Value", y = "Residual")
     }
   })
 
@@ -6158,11 +6022,9 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_anova_mm != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$resids_df, aes(x = resid)) +
-          geom_histogram(bins = input$hist_anova_mm_resids_bins) +
-          labs(x = "Residual", y = "Count")
-      ))
+      ggplot(bag$resids_df, aes(x = resid)) +
+        geom_histogram(bins = input$hist_anova_mm_resids_bins) +
+        labs(x = "Residual", y = "Count")
     }
   })
 
@@ -6173,12 +6035,10 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_anova_mm != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$resids_df, aes(sample = resid)) +
-          stat_qq() +
-          stat_qq_line() +
-          labs(x = "Theoretical Quantile", y = "Sample Quantile")
-      ))
+      ggplot(bag$resids_df, aes(sample = resid)) +
+        stat_qq() +
+        stat_qq_line() +
+        labs(x = "Theoretical Quantile", y = "Sample Quantile")
     }
   })
 
@@ -6211,19 +6071,19 @@ shinyServer(function(session, input, output) {
     validate(need(is.numeric(bag$anova_data$response), ""))
 
 
-    bag$anova_data <- bag$anova_data %>% dplyr::filter(group != "")
+    bag$anova_data <- bag$anova_data %>% filter(group != "")
 
 
     # calculate summaries by explanatory var group
     bag$anova_summaries <- bag$anova_data %>%
-      dplyr::group_by(group) %>%
-      dplyr::summarize(
+      group_by(group) %>%
+      summarize(
         Mean = mean(response, na.rm = TRUE),
         "Std. Dev." = sd(response, na.rm = TRUE),
         " # Non-missing Obs." = sum(!is.na(response)),
         " # Missing Obs." = sum(is.na(response))
       ) %>%
-      dplyr::rename(Group = group) %>%
+      rename(Group = group) %>%
       as.data.frame()
 
     bag$anova_summaries[, 2:ncol(bag$anova_summaries)] <- round(
@@ -6408,11 +6268,9 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_anova_mg != FALSE) {
-      suppressWarnings(print(
-        ggplot(data = drop_na(bag$anova_data, group), aes(x = group, y = response)) +
-          geom_boxplot() +
-          labs(x = "Group", y = "Response")
-      ))
+      ggplot(data = drop_na(bag$anova_data, group), aes(x = group, y = response)) +
+        geom_boxplot() +
+        labs(x = "Group", y = "Response")
     }
   })
 
@@ -6423,12 +6281,10 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_anova_mg != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$resids_df, aes(x = fitted, y = resid)) +
-          geom_point(size = 2) +
-          geom_abline(slope = 0) +
-          labs(x = "Fitted Value", y = "Residual")
-      ))
+      ggplot(bag$resids_df, aes(x = fitted, y = resid)) +
+        geom_point(size = 2) +
+        geom_abline(slope = 0) +
+        labs(x = "Fitted Value", y = "Residual")
     }
   })
 
@@ -6438,11 +6294,9 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_anova_mg != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$resids_df, aes(x = resid)) +
-          geom_histogram(bins = input$hist_anova_mg_resids_bins) +
-          labs(x = "Residual", y = "Count")
-      ))
+      ggplot(bag$resids_df, aes(x = resid)) +
+        geom_histogram(bins = input$hist_anova_mg_resids_bins) +
+        labs(x = "Residual", y = "Count")
     }
   })
 
@@ -6453,12 +6307,10 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_anova_mg != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$resids_df, aes(sample = resid)) +
-          stat_qq() +
-          stat_qq_line() +
-          labs(x = "Theoretical Quantile", y = "Sample Quantile")
-      ))
+      ggplot(bag$resids_df, aes(sample = resid)) +
+        stat_qq() +
+        stat_qq_line() +
+        labs(x = "Theoretical Quantile", y = "Sample Quantile")
     }
   })
 
@@ -7335,8 +7187,8 @@ shinyServer(function(session, input, output) {
 
 
     # fit regression line and calculate summaries
-    bag$lm_out <-  suppressWarnings(lm(bag$y ~ bag$x))
-    bag$reg_summary <-  suppressWarnings(summary(bag$lm_out))
+    bag$lm_out <- lm(bag$y ~ bag$x)
+    bag$reg_summary <- summary(bag$lm_out)
 
 
     # make df w/ regression inference output
@@ -7414,22 +7266,20 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_reg_inf != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$data_new_df,
-          aes_string(
-            x = paste0("`", input$reg_inference_select_expl_var, "`"),
-            y = paste0("`", input$reg_inference_select_resp_var, "`")
-          )
+      ggplot(bag$data_new_df,
+        aes(
+          x = !!sym(input$reg_inference_select_expl_var),
+          y = !!sym(input$reg_inference_select_resp_var)
+        )
+      ) +
+        geom_abline(
+          intercept = bag$lm_out$coefficients[1],
+          slope = bag$lm_out$coefficients[2],
+          color = "blue",
+          alpha = 0.75,
+          linewidth = 1.5
         ) +
-          geom_abline(
-            intercept = bag$lm_out$coefficients[1],
-            slope = bag$lm_out$coefficients[2],
-            color = "blue",
-            alpha = 0.75,
-            size = 1.5
-          ) +
-          geom_point(size = 2)
-      ))
+        geom_point(size = 2)
     }
   })
 
@@ -7440,12 +7290,10 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_reg_inf != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$resid_plot_df, aes(x = fitted, y = resid)) +
-          geom_point(size = 2) +
-          geom_abline(slope = 0) +
-          labs(x = "Fitted Value", y = "Residual")
-      ))
+      ggplot(bag$resid_plot_df, aes(x = fitted, y = resid)) +
+        geom_point(size = 2) +
+        geom_abline(slope = 0) +
+        labs(x = "Fitted Value", y = "Residual")
     }
   })
 
@@ -7455,11 +7303,9 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_reg_inf != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$resid_plot_df, aes(x = resid)) +
-          geom_histogram(bins = input$hist_reg_resids_bins) +
-          labs(x = "Residual", y = "Count")
-      ))
+      ggplot(bag$resid_plot_df, aes(x = resid)) +
+        geom_histogram(bins = input$hist_reg_resids_bins) +
+        labs(x = "Residual", y = "Count")
     }
   })
 
@@ -7469,12 +7315,10 @@ shinyServer(function(session, input, output) {
     # don't show output or placeholder if no vars selected or if user changes var
     #  (until button pressed)
     if (bag$do_reg_inf != FALSE) {
-      suppressWarnings(print(
-        ggplot(bag$resid_plot_df, aes(sample = resid)) +
-          stat_qq() +
-          stat_qq_line() +
-          labs(x = "Theoretical Quantile", y = "Sample Quantile")
-      ))
+      ggplot(bag$resid_plot_df, aes(sample = resid)) +
+        stat_qq() +
+        stat_qq_line() +
+        labs(x = "Theoretical Quantile", y = "Sample Quantile")
     }
   })
 

@@ -3,7 +3,6 @@
 \docType{package}
 \name{StatTeacherAssistant-package}
 \alias{StatTeacherAssistant-package}
-\alias{_PACKAGE}
 \alias{StatTeacherAssistant}
 \title{StatTeacherAssistant: An App that Assists Intro Statistics Instructors with
   Data Sets}
@@ -19,12 +18,12 @@ Includes an interactive application designed to support
 \details{
 Package: StatTeacherAssistant \cr
 Type: Package \cr
-Version: 0.0.1 \cr
-Date: 2022-11-23 \cr
+Version: 0.0.3 \cr
+Date: 2025-05-01 \cr
 Depends: R (>= 3.5.0) \cr
-Imports: DescTools, dplyr, DT, ggplot2, plotly, rhandsontable, rio, rmatio,
-shiny, shinyalert, shinyBS, shinyjs, sortable, stringi, stringr,
-teachingApps, tidyr
+Imports: DescTools, dplyr, DT, extraDistr, ggplot2, plotly, rhandsontable,
+rio, rmatio, shiny, shinyalert, shinyBS, shinyjs, sortable, stringi, stringr,
+tidyr
 License: MIT \cr
 BugReports: https://github.com/ccasement/StatTeacherAssistant/issues \cr
 Encoding: UTF-8 \cr

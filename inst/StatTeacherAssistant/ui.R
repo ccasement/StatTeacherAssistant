@@ -46,13 +46,6 @@ navbarPage("StatTeacherAssistant",
     #tags$head(tags$style(HTML(".modal-footer {display: none}"))),
 
 
-    # suppress all warnings in console
-    # tags$style(type = "text/css",
-    #   ".shiny-output-error {visibility: hidden;}",
-    #   ".shiny-output-error:before {visibility: hidden;}"
-    # ),
-
-
     # remove arrows from all numeric inputs
     tags$style(HTML("
       input[type=number]::-webkit-inner-spin-button,
@@ -3185,8 +3178,21 @@ navbarPage("StatTeacherAssistant",
       linebreaks(1),
 
 
+      # article info
+      h4("Information for Citing the App"),
+
+      p("Casement, C. J., & McSweeney, L. A. (2023). StatTeacherAssistant: An
+        Application for Creating, Adjusting, and Checking the Suitability of
+        Data Sets for Courses that Incorporate Introductory Statistical Methods.
+        Journal of Statistics and Data Science Education, 32(1), 36–46.
+        https://doi.org/10.1080/26939169.2023.2190009"
+      ),
+
+      linebreaks(1),
+
+
       # copyright statement
-      p("Copyright \uA9 2020-2023 by Christopher J. Casement and Laura A.
+      p("Copyright \uA9 2020-2025 by Christopher J. Casement and Laura A.
         McSweeney."
       ),
 

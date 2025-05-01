@@ -3,9 +3,8 @@ An application for creating, adjusting, and checking the suitability of
 data sets for courses that incorporate introductory statistical methods
 
 <!-- start badges -->
-<!-- start badges -->
 
-![](https://img.shields.io/badge/release-v0.0.1-blue?style=flat) [![CRAN
+![](https://img.shields.io/badge/release-v0.0.2-blue?style=flat) [![CRAN
 status](https://www.r-pkg.org/badges/version/StatTeacherAssistant)](https://CRAN.R-project.org/package=StatTeacherAssistant)
 <!-- end badges -->
 
